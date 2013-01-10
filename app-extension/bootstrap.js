@@ -174,6 +174,7 @@ function startup(data, reasonCode) {
           stopOnError: options.stopOnError,
           suppressWebConsole: options.suppressWebConsole,
           verbose: options.verbose,
+          parseable: options.parseable,
         }
       }
     });
