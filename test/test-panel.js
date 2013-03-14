@@ -4,8 +4,9 @@
 
 let { Cc, Ci } = require("chrome");
 const { Loader } = require('sdk/test/loader');
+const { LoaderWithHookedConsole } = require("sdk/test/loader");
 const timer = require("sdk/timers");
-const self = require('self');
+const self = require('sdk/self');
 
 exports["test Panel"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
@@ -454,7 +455,7 @@ exports["test Content URL Option"] = function(assert) {
                     "Panel throws an exception if contentURL is not a URL.");
 };
 
-exports.testSVGDocument = function(assert) {
+exports["test SVG Document"] = function(assert) {
   let SVG_URL = self.data.url("mofo_logo.SVG");
 
   let panel = require("sdk/panel").Panel({ contentURL: SVG_URL });
@@ -486,11 +487,34 @@ exports["test ContentScriptOptions Option"] = function(assert, done) {
     });
 };
 
+exports["test console.log in Panel"] = function(assert, done) {
+  let text = 'console.log() in Panel works!';
+  let html = '<script>onload = function log(){\
+                console.log("' + text + '");\
+              }</script>';
+
+  let { loader } = LoaderWithHookedConsole(module, onMessage);
+  let { Panel } = loader.require('sdk/panel');
+
+  let panel = Panel({
+    contentURL: 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
+  });
+
+  panel.show();
+  
+  function onMessage(type, message) {
+    assert.equal(type, 'log', 'console.log() works');
+    assert.equal(message, text, 'console.log() works');
+    panel.destroy();
+    done();
+  }
+};
+
 try {
   require("sdk/panel");
 }
 catch (e) {
-  if (!/supports only Firefox/.test(e.message))
+  if (!/^Unsupported Application/.test(e.message))
     throw e;
 
   module.exports = {
