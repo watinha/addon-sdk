@@ -4,6 +4,9 @@
 
 const prefs = require("sdk/preferences/service");
 const { id, name } = require("sdk/self");
+const { Cc, Cu, Ci } = require("chrome");
+const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
+                     getService(Ci.mozIJSSubScriptLoader);
 
 const ADDON_LOG_LEVEL_PREF = "extensions." + id + ".sdk.console.logLevel";
 const SDK_LOG_LEVEL_PREF = "extensions.sdk.console.logLevel";
@@ -73,14 +76,27 @@ exports.testPlainTextConsole = function(test) {
   var tbLines = prints[0].split("\n");
   test.assertEqual(tbLines[0], "error: " + name + ": An exception occurred.");
   test.assertEqual(tbLines[1], "Error: blah");
-  test.assertEqual(tbLines[2], module.uri + " 71");
+  test.assertEqual(tbLines[2], module.uri + " 74");
   test.assertEqual(tbLines[3], "Traceback (most recent call last):");
+
+  prints = [];
+  try {
+    loadSubScript("invalid-url", {});
+    test.fail("successed in calling loadSubScript with invalid-url");
+  }
+  catch(e) {
+    con.exception(e);
+  }
+  var tbLines = prints[0].split("\n");
+  test.assertEqual(tbLines[0], "error: " + name + ": An exception occurred.");
+  test.assertEqual(tbLines[1], "Error creating URI (invalid URL scheme?)");
+  test.assertEqual(tbLines[2], "Traceback (most recent call last):");
 
   prints = [];
   con.trace();
   tbLines = prints[0].split("\n");
   test.assertEqual(tbLines[0], "info: " + name + ": Traceback (most recent call last):");
-  test.assertEqual(tbLines[tbLines.length - 2].trim(), "con.trace();");
+  test.assertEqual(tbLines[tbLines.length - 4].trim(), "con.trace();");
 
   // Whether or not console methods should print at the various log levels,
   // structured as a hash of levels, each of which contains a hash of methods,

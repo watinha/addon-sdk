@@ -5,6 +5,21 @@
 The `window/utils` module provides helper functions for working with
 application windows.
 
+## Private Windows ##
+
+With this module your add-on will see private browser windows
+even if it has not explicitly opted into private browsing, so you need
+to take care not to store any user data derived from private browser windows.
+
+The exception is the [`windows()`](modules/sdk/window/utils.html#windows())
+function which returns an array of currently opened windows. Private windows
+will not be included in this list if your add-on has not opted into private
+browsing.
+
+To learn more about private windows, how to opt into private browsing, and how
+to support private browsing, refer to the
+[documentation for the `private-browsing` module](modules/sdk/private-browsing.html).
+
 <api name="getMostRecentBrowserWindow">
   @function
   Get the topmost browser window, as an
@@ -38,9 +53,9 @@ application windows.
   [`nsIXULWindow`](https://developer.mozilla.org/en/nsIDOMWindow) for the given
   [`nsIDOMWindow`](https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIXULWindow):
 
-      let { Ci } = require('chrome');
-      let utils = require('api-utils/window/utils');
-      let active = utils.activeBrowserWindow;
+      var { Ci } = require('chrome');
+      var utils = require('sdk/window/utils');
+      var active = utils.getMostRecentBrowserWindow();
       active instanceof Ci.nsIXULWindow // => false
       utils.getXULWindow(active) instanceof Ci.nsIXULWindow // => true
 
@@ -54,9 +69,9 @@ application windows.
   [`nsIBaseWindow`](http://mxr.mozilla.org/mozilla-central/source/widget/nsIBaseWindow.idl)
   for the given [`nsIDOMWindow`](https://developer.mozilla.org/en/nsIDOMWindow):
 
-      let { Ci } = require('chrome');
-      let utils = require('api-utils/window/utils');
-      let active = utils.activeBrowserWindow;
+      var { Ci } = require('chrome');
+      var utils = require('sdk/window/utils');
+      var active = utils.getMostRecentBrowserWindow();
       active instanceof Ci.nsIBaseWindow // => false
       utils.getBaseWindow(active) instanceof Ci.nsIBaseWindow // => true
 
@@ -87,8 +102,8 @@ element.
   removes it from the application's window registry, so it won't appear
   in the OS specific window lists for the application.
 
-      let { backgroundify, open } = require('api-utils/window/utils');
-      let bgwin = backgroundify(open('data:text/html,Hello backgroundy'));
+      var { backgroundify, open } = require('sdk/window/utils');
+      var bgwin = backgroundify(open('data:text/html,Hello backgroundy'));
 
   Optionally more configuration options may be passed via a second
   `options` argument. If `options.close` is `false`, the unregistered
@@ -96,8 +111,8 @@ element.
   the application from quitting. You should make sure to close all such
   windows manually.
 
-      let { backgroundify, open } = require('api-utils/window/utils');
-      let bgwin = backgroundify(open('data:text/html,Foo'), {
+      var { backgroundify, open } = require('sdk/window/utils');
+      var bgwin = backgroundify(open('data:text/html,Foo'), {
         close: false
       });
 
@@ -113,8 +128,8 @@ element.
   It takes the `uri` of the window document as its first
   argument and an optional hash of `options` as its second argument.
 
-      let { open } = require('api-utils/window/utils');
-      let window = open('data:text/html,Hello Window');
+      var { open } = require('sdk/window/utils');
+      var window = open('data:text/html,Hello Window');
 
   This function wraps [`nsIWindowWatcher.openWindow`](https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIWindowWatcher#openWindow%28%29).
   @param uri {string}
@@ -131,8 +146,8 @@ element.
     [`window.open` features documentation](https://developer.mozilla.org/en/DOM/window.open#Position_and_size_features)
     for more details.
 
-        let { open } = require('api-utils/window/utils');
-        let window = open('data:text/html,Hello Window', {
+        var { open } = require('sdk/window/utils');
+        var window = open('data:text/html,Hello Window', {
           name: 'jetpack window',
           features: {
             width: 200,
@@ -169,6 +184,11 @@ element.
   @function
   Returns an array of all currently opened windows.
   Note that these windows may still be loading.
+
+  If your add-on has not
+  [opted into private browsing](modules/sdk/private-browsing.html),
+  any private browser windows will not be included in the array.
+
   @returns {Array}
   Array of `nsIDOMWindow` instances.
 </api>
